@@ -121,7 +121,6 @@ proto-plus==1.25.0
 protobuf==5.29.3
 psutil==6.1.1
 psycopg==3.2.6
-psycopg2 @ file:///C:/psycopg2-2.9.10-cp312-cp312-win_amd64.whl#sha256=4a579d6243da40a7b3182e0430493dbd55950c493d8c68f4eec0b302f6bbf20e
 psycopg2-binary==2.9.10
 pyarrow==19.0.0
 pyasn1==0.6.1
