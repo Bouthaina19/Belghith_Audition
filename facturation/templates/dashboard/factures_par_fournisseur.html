@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content-container">
+  <div class="page-header">
+    <h1><i class="fas fa-file-invoice"></i> Factures de {{ fournisseur.nom }}</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="openModal('add-facture-modal')">
+        <i class="fas fa-plus"></i> Ajouter une facture
+      </button>
+    </div>
+  </div>
+
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="summary-icon">
+        <i class="fas fa-file-invoice-dollar"></i>
+      </div>
+      <div class="summary-content">
+        <h3>Total</h3>
+        <p>{{ total_ttc|floatformat:2 }} DT</p>
+      </div>
+    </div>
+    
+    <div class="summary-card">
+      <div class="summary-icon">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
+      <div class="summary-content">
+        <h3>Impayées Total</h3>
+        <p>{{ total_ttc_non_regle|floatformat:2 }} DT</p>
+      </div>
+    </div>
+    
+    <div class="summary-card">
+      <div class="summary-icon">
+        <i class="fas fa-file-invoice"></i>
+      </div>
+      <div class="summary-content">
+        <h3>Total TTC</h3>
+        <p>{{ total_ht|floatformat:2 }} DT</p>
+      </div>
+    </div>
+    
+    <div class="summary-card">
+      <div class="summary-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="summary-content">
+        <h3>Impayées TTC</h3>
+        <p>{{ total_ht_non_regle|floatformat:2 }} DT</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="filters-card">
+    <form method="GET" class="filter-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date de début</label>
+          <input type="date" name="date_debut" value="{{ request.GET.date_debut }}" class="form-control">
+        </div>
+  
+        <div class="form-group">
+          <label>Date de fin</label>
+          <input type="date" name="date_fin" value="{{ request.GET.date_fin }}" class="form-control">
+        </div>
+  
+        <div class="form-group">
+          <label>État</label>
+          <select name="etat" class="form-control">
+            <option value="">Tous</option>
+            <option value="R" {% if request.GET.etat == "R" %}selected{% endif %}>Réglées</option>
+            <option value="N" {% if request.GET.etat == "N" %}selected{% endif %}>Non réglées</option>
+          </select>
+        </div>
+  
+        <div class="form-group">
+          <label>Numéro de facture</label>
+          <input type="text" name="numero" value="{{ request.GET.numero }}" class="form-control" placeholder="Rechercher...">
+        </div>
+  
+        <div class="form-actions">
+          <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-filter"></i> Filtrer
+          </button>
+          <a href="{% url 'fournisseur_factures' fournisseur.id %}" class="btn btn-outline">Réinitialiser</a>
+        </div>
+      </div>
+    </form>
+  </div>  
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Numéro</th>
+          <th>Date</th>
+          <th>Montant TTC</th>
+          <th>Retenue</th>
+          <th>Montant Total</th>
+          <th>État</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for facture in factures %}
+        <tr>
+          <td>{{ facture.numero }}</td>
+          <td>{{ facture.date|date:"d/m/Y" }}</td>
+          <td>{{ facture.montant|floatformat:2 }} DT</td>
+          <td>{{ facture.retenu|floatformat:2 }} DT</td>
+          <td>{{ facture.montant_ttc|floatformat:2 }} DT</td>
+          <td>
+            <span class="badge {% if facture.etat == 'R' %}badge-success{% else %}badge-warning{% endif %}">
+              {{ facture.get_etat_display }}
+            </span>
+          </td>
+          <td class="actions">
+            <button class="btn-icon edit" onclick="openEditModal({{ facture.id }})">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-icon delete" onclick="openDeleteModal({{ facture.id }})">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center">Aucune facture trouvée</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    {% if factures.has_previous %}
+      <a href="?page={{ factures.previous_page_number }}{% if request.GET.date_debut %}&date_debut={{ request.GET.date_debut }}{% endif %}{% if request.GET.date_fin %}&date_fin={{ request.GET.date_fin }}{% endif %}{% if request.GET.etat %}&etat={{ request.GET.etat }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}" class="page-link">&laquo;</a>
+    {% endif %}
+    
+    {% for num in factures.paginator.page_range %}
+      {% if factures.number == num %}
+        <a href="#" class="page-link active">{{ num }}</a>
+      {% else %}
+        <a href="?page={{ num }}{% if request.GET.date_debut %}&date_debut={{ request.GET.date_debut }}{% endif %}{% if request.GET.date_fin %}&date_fin={{ request.GET.date_fin }}{% endif %}{% if request.GET.etat %}&etat={{ request.GET.etat }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}" class="page-link">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+    
+    {% if factures.has_next %}
+      <a href="?page={{ factures.next_page_number }}{% if request.GET.date_debut %}&date_debut={{ request.GET.date_debut }}{% endif %}{% if request.GET.date_fin %}&date_fin={{ request.GET.date_fin }}{% endif %}{% if request.GET.etat %}&etat={{ request.GET.etat }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}" class="page-link">&raquo;</a>
+    {% endif %}
+  </div>
+
+  <div id="add-facture-modal" class="modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2><i class="fas fa-plus-circle"></i> Ajouter une facture</h2>
+        <span class="close" onclick="closeModal('add-facture-modal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="{% url 'ajouter_facture' fournisseur.id %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label>Numéro de facture</label>
+            <input type="text" name="numero" required class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" name="date" required class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Montant TTC</label>
+            <input type="number" step="0.01" name="montant" required class="form-control">
+          </div>
+          <div class="form-group">
+            <label>État</label>
+            <select name="etat" class="form-control">
+              <option value="N">Non réglée</option>
+              <option value="R">Réglée</option>
+            </select>
+          </div>
+          <div class="form-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('add-facture-modal')">Annuler</button>
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Édition Facture -->
+<div id="edit-facture-modal" class="modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2><i class="fas fa-edit"></i> Modifier la facture</h2>
+        <span class="close" onclick="closeModal('edit-facture-modal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="{% url 'editer_facture' %}">
+          {% csrf_token %}
+          <input type="hidden" name="id" id="edit-facture-id">
+          
+          <div class="form-group">
+            <label>Numéro de facture</label>
+            <input type="text" name="numero" id="edit-numero" required class="form-control">
+          </div>
+          
+          <div class="form-group">
+            <label>Date de facturation</label>
+            <input type="date" name="date" id="edit-date" required class="form-control">
+          </div>
+          
+          <div class="form-group">
+            <label>Montant TTC</label>
+            <input type="number" step="0.01" name="montant" id="edit-montant" required class="form-control" min="0">
+          </div>
+          
+          <div class="form-group">
+            <label>État</label>
+            <select name="etat" id="edit-etat" class="form-control">
+              <option value="N">Non réglée</option>
+              <option value="R">Réglée</option>
+            </select>
+          </div>
+          
+          <div class="form-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('edit-facture-modal')">Annuler</button>
+            <button type="submit" class="btn btn-primary">Mettre à jour</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Suppression Facture -->
+  <div id="delete-facture-modal" class="modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2><i class="fas fa-exclamation-triangle"></i> Confirmer la suppression</h2>
+        <span class="close" onclick="closeModal('delete-facture-modal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir supprimer cette facture ?</p>
+        <form method="POST" action="" id="delete-facture-form">
+          {% csrf_token %}
+          <input type="hidden" name="facture_id" id="delete-facture-id">
+          <div class="form-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('delete-facture-modal')">Annuler</button>
+            <button type="submit" class="btn btn-danger">Supprimer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function openEditModal(factureId) {
+    // Récupérer les données de la facture
+    fetch(`/factures/${factureId}/json/`)
+      .then(response => response.json())
+      .then(data => {
+        // Remplir le formulaire
+        document.getElementById('edit-facture-id').value = data.id;
+        document.getElementById('edit-numero').value = data.numero;
+        document.getElementById('edit-date').value = data.date;
+        document.getElementById('edit-montant').value = data.montant;
+        document.getElementById('edit-etat').value = data.etat;
+        
+        // Calcul automatique lors du changement du montant
+        document.getElementById('edit-montant').addEventListener('input', function() {
+          const montant = parseFloat(this.value) || 0;
+          const retenu = montant >= 1000 ? montant * 0.01 : 0;
+          const ttc = montant + retenu;
+          
+          document.getElementById('edit-retenu').value = retenu.toFixed(2) + ' DT';
+          document.getElementById('edit-montant-ttc').value = ttc.toFixed(2) + ' DT';
+        });
+        
+        openModal('edit-facture-modal');
+      });
+}
+
+function openDeleteModal(factureId) {
+    const form = document.getElementById('delete-facture-form');
+    form.action = "{% url 'supprimer_facture' %}?id=" + factureId;
+    document.getElementById('delete-facture-id').value = factureId;
+    openModal('delete-facture-modal');
+}
+
+// Fermer quand on clique en dehors
+window.onclick = function(event) {
+    if (event.target.className === 'modal') {
+        event.target.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
