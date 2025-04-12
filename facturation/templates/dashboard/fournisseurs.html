@@ -1,11 +1,151 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<h1>Liste des Fournisseurs</h1>
-<div class="fournisseurs-list">
-  {% for fournisseur in fournisseurs %}
-    <div class="fournisseur-card">
-      <h3>{{ fournisseur.nom }}</h3>
+<div class="fournisseurs-container">
+  <div class="fournisseurs-header">
+    <div class="header-text">
+      <h1><i class="fas fa-truck"></i> Gestion des Fournisseurs</h1>
+      <p>Gérez l'ensemble de vos partenaires commerciaux</p>
     </div>
-  {% endfor %}
+    <button class="add-btn" onclick="openModal('add-modal')">
+      <i class="fas fa-plus"></i> Nouveau fournisseur
+    </button>
+  </div>
+
+  <div class="fournisseurs-grid">
+    {% for fournisseur in fournisseurs %}
+    <div class="fournisseur-card">
+      <div class="card-main">
+        <div class="card-icon">
+          <i class="fas fa-building"></i>
+        </div>
+        <div class="card-info">
+          <h3>{{ fournisseur.nom }}</h3>
+          <div class="card-stats">
+            <span><i class="fas fa-file-invoice"></i> {{ fournisseur.total_factures }} facture{{ fournisseur.total_factures|pluralize }}</span>
+            {% if fournisseur.derniere_facture %}
+              <span><i class="fas fa-calendar-alt"></i> Dernière: {{ fournisseur.derniere_facture|date:"d/m/Y" }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="action-btn edit" onclick="openModal('edit-modal', {{ fournisseur.id }}, '{{ fournisseur.nom }}')">
+          <i class="fas fa-pencil-alt"></i>
+        </button>
+        <button class="action-btn delete" onclick="openDeleteModal({{ fournisseur.id }})">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-box-open"></i>
+      </div>
+      <h3>Aucun fournisseur enregistré</h3>
+      <p>Commencez par ajouter votre premier fournisseur</p>
+      <button class="add-btn" onclick="openModal('add-modal')">
+        <i class="fas fa-plus"></i> Ajouter un fournisseur
+      </button>
+    </div>
+    {% endfor %}
+  </div>
 </div>
+
+<!-- Modals -->
+<div id="add-modal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h2><i class="fas fa-plus-circle"></i> Ajouter un fournisseur</h2>
+      <span class="close" onclick="closeModal('add-modal')">&times;</span>
+    </div>
+    <div class="modal-body">
+      <form method="POST" action="{% url 'add_fournisseur' %}">
+        {% csrf_token %}
+        <div class="form-group">
+          <label>Nom du fournisseur</label>
+          <input type="text" name="nom" required placeholder="Entrez le nom complet">
+        </div>
+        <div class="form-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('add-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="edit-modal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h2><i class="fas fa-edit"></i> Modifier le fournisseur</h2>
+      <span class="close" onclick="closeModal('edit-modal')">&times;</span>
+    </div>
+    <div class="modal-body">
+      <form id="edit-form" method="POST" action="">
+        {% csrf_token %}
+        <input type="hidden" name="fournisseur_id" id="edit-id">
+        <div class="form-group">
+          <label>Nom du fournisseur</label>
+          <input type="text" name="nom" id="edit-nom" required placeholder="Nouveau nom">
+        </div>
+        <div class="form-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('edit-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Mettre à jour</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="delete-modal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h2><i class="fas fa-exclamation-triangle"></i> Confirmer la suppression</h2>
+      <span class="close" onclick="closeModal('delete-modal')">&times;</span>
+    </div>
+    <div class="modal-body">
+      <p>Êtes-vous sûr de vouloir supprimer définitivement ce fournisseur ?</p>
+      <p class="warning-text"><i class="fas fa-exclamation-circle"></i> Cette action est irréversible</p>
+      <form id="delete-form" method="POST" action="">
+        {% csrf_token %}
+        <input type="hidden" name="fournisseur_id" id="delete-id">
+        <div class="form-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('delete-modal')">Annuler</button>
+          <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(modalId, id = null, nom = null) {
+  if (modalId === 'edit-modal') {
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-nom').value = nom;
+    document.getElementById('edit-form').action = `/fournisseurs/${id}/edit/`;
+  }
+  document.getElementById(modalId).style.display = 'block';
+}
+
+function openDeleteModal(id) {
+  document.getElementById('delete-id').value = id;
+  document.getElementById('delete-form').action = `/fournisseurs/${id}/delete/`;
+  document.getElementById('delete-modal').style.display = 'block';
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+}
+
+// Fermer quand on clique en dehors
+window.onclick = function(event) {
+  if (event.target.className === 'modal') {
+    event.target.style.display = 'none';
+  }
+}
+</script>
 {% endblock %}

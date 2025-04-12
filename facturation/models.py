@@ -3,6 +3,9 @@ from django.core.validators import MinValueValidator
 
 class Fournisseur(models.Model):
     nom = models.CharField(max_length=100, verbose_name="Nom du fournisseur")
+    
+    def nombre_factures(self):
+        return self.facture_set.count()
 
     def __str__(self):
         return self.nom
