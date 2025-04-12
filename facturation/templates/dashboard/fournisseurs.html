@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Liste des Fournisseurs</h1>
+<div class="fournisseurs-list">
+  {% for fournisseur in fournisseurs %}
+    <div class="fournisseur-card">
+      <h3>{{ fournisseur.nom }}</h3>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
