@@ -18,7 +18,7 @@
         <i class="fas fa-file-invoice-dollar"></i>
       </div>
       <div class="summary-content">
-        <h3>Total TTC</h3>
+        <h3>Total</h3>
         <p>{{ total_ttc|floatformat:2 }} DT</p>
       </div>
     </div>
@@ -28,7 +28,7 @@
         <i class="fas fa-exclamation-circle"></i>
       </div>
       <div class="summary-content">
-        <h3>Impayées TTC</h3>
+        <h3>Impayées Total</h3>
         <p>{{ total_ttc_non_regle|floatformat:2 }} DT</p>
       </div>
     </div>
@@ -38,7 +38,7 @@
         <i class="fas fa-file-invoice"></i>
       </div>
       <div class="summary-content">
-        <h3>Total HT</h3>
+        <h3>Total TTC</h3>
         <p>{{ total_ht|floatformat:2 }} DT</p>
       </div>
     </div>
@@ -48,7 +48,7 @@
         <i class="fas fa-exclamation-triangle"></i>
       </div>
       <div class="summary-content">
-        <h3>Impayées HT</h3>
+        <h3>Impayées TTC</h3>
         <p>{{ total_ht_non_regle|floatformat:2 }} DT</p>
       </div>
     </div>
@@ -97,9 +97,9 @@
         <tr>
           <th>Numéro</th>
           <th>Date</th>
-          <th>Montant HT</th>
-          <th>Retenue</th>
           <th>Montant TTC</th>
+          <th>Retenue</th>
+          <th>Montant Total</th>
           <th>État</th>
           <th>Actions</th>
         </tr>
@@ -171,7 +171,7 @@
             <input type="date" name="date" required class="form-control">
           </div>
           <div class="form-group">
-            <label>Montant HT</label>
+            <label>Montant TTC</label>
             <input type="number" step="0.01" name="montant" required class="form-control">
           </div>
           <div class="form-group">
@@ -213,7 +213,7 @@
           </div>
           
           <div class="form-group">
-            <label>Montant HT</label>
+            <label>Montant TTC</label>
             <input type="number" step="0.01" name="montant" id="edit-montant" required class="form-control" min="0">
           </div>
           
